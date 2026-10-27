@@ -71,8 +71,11 @@ def validate_config():
     errors = []
     warnings = []
 
-    if not settings.amap_api_key:
+    fast_mode = os.getenv("TRIP_FAST_MODE", "true").lower() != "false"
+    if not settings.amap_api_key and not fast_mode:
         errors.append("AMAP_API_KEY未配置")
+    elif not settings.amap_api_key:
+        warnings.append("未配置地图服务，快速模式使用内置城市资料")
 
     # HelloAgentsLLM会自动从LLM_API_KEY读取,不强制要求OPENAI_API_KEY
     llm_api_key = os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY")

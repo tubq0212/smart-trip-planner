@@ -350,6 +350,7 @@ import AMapLoader from '@amap/amap-jsapi-loader'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import type { Attraction, RouteSegment, TripPlan } from '@/types'
+import { API_BASE_URL } from '@/services/api'
 
 const router = useRouter()
 const tripPlan = ref<TripPlan | null>(null)
@@ -371,7 +372,7 @@ onMounted(async () => {
   if (data) {
     tripPlan.value = JSON.parse(data)
     // 加载景点图片
-    await loadAttractionPhotos()
+    void loadAttractionPhotos()
     // 等待DOM渲染完成后初始化地图
     await nextTick()
     initMap()
@@ -568,7 +569,7 @@ const loadAttractionPhotos = async () => {
 
   tripPlan.value.days.forEach(day => {
     day.attractions.forEach(attraction => {
-      const promise = fetch(`http://localhost:8000/api/poi/photo?name=${encodeURIComponent(attraction.name)}`)
+      const promise = fetch(`${API_BASE_URL}/api/poi/photo?name=${encodeURIComponent(attraction.name)}`)
         .then(res => res.json())
         .then(data => {
           if (data.success && data.data.photo_url) {
@@ -925,8 +926,16 @@ const exportAsPDF = async () => {
 // 初始化地图
 const initMap = async () => {
   try {
+    const response = await fetch(`${API_BASE_URL}/api/client-config`)
+    const clientConfig = response.ok ? await response.json() : {}
+    const mapKey = clientConfig.amap_web_js_key || import.meta.env.VITE_AMAP_WEB_JS_KEY
+    if (!mapKey) {
+      const container = document.getElementById('amap-container')
+      if (container) container.textContent = '在线地图尚未配置，可先查看和编辑行程。'
+      return
+    }
     const AMap = await AMapLoader.load({
-      key: import.meta.env.VITE_AMAP_WEB_JS_KEY,  // 高德地图Web端(JS API) Key
+      key: mapKey,
       version: '2.0',
       plugins: ['AMap.Marker', 'AMap.Polyline', 'AMap.InfoWindow']
     })

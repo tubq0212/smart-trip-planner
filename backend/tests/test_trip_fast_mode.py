@@ -75,7 +75,7 @@ class TripFastModeTests(unittest.TestCase):
         self.assertEqual(plan["city"], "厦门")
         self.assertEqual(len(plan["days"]), 3)
         self.assertGreater(plan["budget"]["total"], 0)
-        self.assertEqual(len(plan["weather_info"]), 3)
+        self.assertEqual(plan["weather_info"], [])
 
         first_day = plan["days"][0]
         first_names = [spot["name"] for spot in first_day["attractions"]]

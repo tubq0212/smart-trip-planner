@@ -1,7 +1,7 @@
 """高德地图MCP服务封装"""
+from __future__ import annotations
 
 from typing import List, Dict, Any, Optional
-from hello_agents.tools import MCPTool
 from ..config import get_settings
 from ..models.schemas import Location, POIInfo, WeatherInfo
 
@@ -19,6 +19,7 @@ def get_amap_mcp_tool() -> MCPTool:
     global _amap_mcp_tool
     
     if _amap_mcp_tool is None:
+        from hello_agents.tools import MCPTool
         settings = get_settings()
         
         if not settings.amap_api_key:

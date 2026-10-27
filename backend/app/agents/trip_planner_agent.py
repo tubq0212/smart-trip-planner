@@ -7,9 +7,6 @@ import random
 import urllib.parse
 import urllib.request
 from typing import Dict, Any, List
-from hello_agents import SimpleAgent
-from hello_agents.tools import MCPTool
-from ..services.llm_service import get_llm
 from ..models.schemas import TripRequest, TripPlan, DayPlan, Attraction, Meal, WeatherInfo, Location, Hotel, Budget, RouteSegment
 from ..config import get_settings
 
@@ -162,6 +159,9 @@ class MultiAgentTripPlanner:
 
     def __init__(self):
         """初始化多智能体系统"""
+        from hello_agents import SimpleAgent
+        from hello_agents.tools import MCPTool
+        from ..services.llm_service import get_llm
         print("🔄 开始初始化多智能体旅行规划系统...")
 
         try:
@@ -431,10 +431,8 @@ class MultiAgentTripPlanner:
             from datetime import datetime, timedelta
 
             settings = get_settings()
-            if not settings.amap_api_key:
-                return None
-
-            pois = self._amap_search_places(request.city, request.preferences)
+            online = bool(settings.amap_api_key)
+            pois = self._amap_search_places(request.city, request.preferences) if online else []
             if not pois:
                 print("AMap direct fallback did not find POIs; using built-in placeholder plan.")
                 pois = self._curated_city_pois(request.city)
@@ -442,7 +440,7 @@ class MultiAgentTripPlanner:
                 return None
 
             try:
-                hotels = self._amap_search_keyword(request.city, request.accommodation or "hotel")
+                hotels = self._amap_search_keyword(request.city, request.accommodation or "hotel") if online else []
             except Exception as exc:
                 print(f"AMap hotel search failed: {exc}")
                 hotels = []
@@ -450,14 +448,14 @@ class MultiAgentTripPlanner:
                 hotels = self._curated_city_hotels(request.city)
 
             try:
-                restaurants = self._amap_search_keyword(request.city, "美食 餐厅")
+                restaurants = self._amap_search_keyword(request.city, "美食 餐厅") if online else []
             except Exception as exc:
                 print(f"AMap restaurant search failed: {exc}")
                 restaurants = []
             if not restaurants:
                 restaurants = self._curated_city_restaurants(request.city)
 
-            weather = self._amap_weather(request.city)
+            weather = self._amap_weather(request.city) if online else {}
             start_date = datetime.strptime(request.start_date, "%Y-%m-%d")
             spots_per_day = 3 if len(pois) >= request.travel_days * 3 else 2
             days = []
@@ -490,7 +488,7 @@ class MultiAgentTripPlanner:
                 ))
 
             weather_info = []
-            for day_index in range(request.travel_days):
+            for day_index in range(request.travel_days) if weather else []:
                 current_date = start_date + timedelta(days=day_index)
                 weather_info.append(WeatherInfo(
                     date=current_date.strftime("%Y-%m-%d"),
@@ -513,7 +511,7 @@ class MultiAgentTripPlanner:
                 end_date=request.end_date,
                 days=days,
                 weather_info=weather_info,
-                overall_suggestions="LLM或MCP超时时，系统已切换为高德Web API直连模式生成真实POI行程。建议出行前再次确认开放时间和预约要求。",
+                overall_suggestions="当前为快速规划模式，使用地图查询或内置城市资料，未调用大模型。预算与交通时间为估算，出行前请确认开放时间和预约要求。",
                 budget=Budget(
                     total_attractions=attraction_cost,
                     total_hotels=hotel_cost,

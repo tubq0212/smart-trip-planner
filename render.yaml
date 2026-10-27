@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: smart-trip-planner
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: TRIP_FAST_MODE
+        value: "true"
+      - key: LOG_LEVEL
+        value: INFO
