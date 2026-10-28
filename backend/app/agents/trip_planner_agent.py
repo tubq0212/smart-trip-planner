@@ -419,7 +419,6 @@ class MultiAgentTripPlanner:
         )
 
 
-# 全局多智能体系统实例
     def _create_amap_direct_plan(self, request: TripRequest) -> TripPlan | None:
         """Build a usable plan from AMap Web API when MCP/LLM is slow or unavailable."""
         try:
@@ -429,7 +428,7 @@ class MultiAgentTripPlanner:
             online = bool(settings.amap_api_key)
             pois = self._amap_search_places(request.city, request.preferences) if online else []
             if not pois:
-                print("AMap direct fallback did not find POIs; using built-in placeholder plan.")
+                print("AMap returned no POIs; checking built-in city data.")
                 pois = self._curated_city_pois(request.city)
             if not pois:
                 return None

@@ -13,7 +13,7 @@
         <span class="icon">✈️</span>
       </div>
       <h1 class="page-title">智能旅行助手</h1>
-      <p class="page-subtitle">基于AI的个性化旅行规划,让每一次出行都完美无忧</p>
+      <p class="page-subtitle">填写目的地和出行偏好，规划每天的景点、住宿与餐饮</p>
     </div>
 
     <a-card class="form-card" :bordered="false">
