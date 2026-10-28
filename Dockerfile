@@ -13,6 +13,7 @@ COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 ENV UV_TOOL_DIR=/opt/amap-tools UV_TOOL_BIN_DIR=/usr/local/bin
 RUN uv tool install --with pydantic==2.10.6 --with pydantic-settings==2.8.1 amap-mcp-server==0.1.11
+RUN python -c "from hello_agents.tools import MCPTool; t = MCPTool(name='amap', server_command=['/usr/local/bin/amap-mcp-server'], env={'AMAP_MAPS_API_KEY':'build-smoke-test'}, auto_expand=True); names = {x.name for x in t.get_expanded_tools()}; assert {'amap_maps_text_search', 'amap_maps_weather'} <= names, 'AMap MCP discovery smoke test failed'"
 COPY backend/app ./app
 COPY backend/cloud_app.py ./cloud_app.py
 COPY --from=web /build/dist /app/frontend/dist

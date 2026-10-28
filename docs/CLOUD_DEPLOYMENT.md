@@ -32,6 +32,9 @@ Render 从本仓库根目录 Dockerfile 构建，一个服务同时提供 Vue �
 `pydantic==2.10.6` 和 `pydantic-settings==2.8.1`，避免该服务依赖的 MCP 1.8.1
 与新版 Pydantic 不兼容。应用自身的 FastMCP 环境不受影响。
 本地未预装该服务时，使用带相同版本约束的 uvx 启动。
+客户端固定使用已验证的 `fastmcp==2.14.7` 和 `mcp==1.28.1`，避免安装到
+HelloAgents 当前适配层不支持的新版接口。Docker 构建会用虚构密钥执行一次
+真实子进程工具发现检查（不查询地图、不调用模型），未发现必要工具则构建失败。
 
 启动时必须发现并注册 `amap_maps_text_search` 和 `amap_maps_weather`；
 失败会直接报错，不再让 Agent 反复调用不存在的工具。
