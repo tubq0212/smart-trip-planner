@@ -24,3 +24,16 @@ Render 从本仓库根目录 Dockerfile 构建，一个服务同时提供 Vue �
 访问 /health 和 /api/trip/health，确认 fast 模式。生成厦门三日游，验证结果、编辑与导出。地图未配置时会显示提示，行程仍可查看和修改。已内置城市包括厦门、北京、上海、杭州和广州；内置资料和预算是演示数据，出行前应核实。
 
 本地测试入口：backend 中运行 python -m pytest tests。云端入口为 cloud_app:app。Docker 构建不包含 .env、虚拟环境、node_modules 或日志。
+
+## 多 Agent 工具注册
+
+`TRIP_FAST_MODE=false` 仍使用景点、天气、酒店和行程规划四个 Agent。
+高德 MCP 服务在构建时以独立工具环境安装，固定 `amap-mcp-server==0.1.11`、
+`pydantic==2.10.6` 和 `pydantic-settings==2.8.1`，避免该服务依赖的 MCP 1.8.1
+与新版 Pydantic 不兼容。应用自身的 FastMCP 环境不受影响。
+本地未预装该服务时，使用带相同版本约束的 uvx 启动。
+
+启动时必须发现并注册 `amap_maps_text_search` 和 `amap_maps_weather`；
+失败会直接报错，不再让 Agent 反复调用不存在的工具。
+`/api/trip/health` 的 `tools_count` 只有在工具发现和注册校验通过后才返回。
+此检查不调用模型；它不代表高德查询或模型鉴权已通过，真实测试另行执行。

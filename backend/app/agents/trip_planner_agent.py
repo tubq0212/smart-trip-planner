@@ -160,24 +160,15 @@ class MultiAgentTripPlanner:
     def __init__(self):
         """初始化多智能体系统"""
         from hello_agents import SimpleAgent
-        from hello_agents.tools import MCPTool
         from ..services.llm_service import get_llm
+        from ..services.amap_service import get_amap_mcp_tool, REQUIRED_AMAP_TOOLS
         print("🔄 开始初始化多智能体旅行规划系统...")
 
         try:
-            settings = get_settings()
-            self.llm = get_llm()
-
             # 创建共享的MCP工具(只创建一次)
             print("  - 创建共享MCP工具...")
-            self.amap_tool = MCPTool(
-                name="amap",
-                description="高德地图服务",
-                server_command=["uvx", "amap-mcp-server"],
-                env={"AMAP_MAPS_API_KEY": settings.amap_api_key},
-                auto_expand=True
-            )
-            self.amap_tool.expandable=True
+            self.amap_tool = get_amap_mcp_tool()
+            self.llm = get_llm()
 
             # 创建景点搜索Agent
             print("  - 创建景点搜索Agent...")
@@ -205,6 +196,10 @@ class MultiAgentTripPlanner:
                 system_prompt=HOTEL_AGENT_PROMPT
             )
             self.hotel_agent.add_tool(self.amap_tool)
+
+            for agent in (self.attraction_agent, self.weather_agent, self.hotel_agent):
+                if not REQUIRED_AMAP_TOOLS.issubset(set(agent.list_tools())):
+                    raise RuntimeError("高德 MCP 子工具未正确注册，已停止模型调用")
 
             # 创建行程规划Agent(不需要工具)
             print("  - 创建行程规划Agent...")

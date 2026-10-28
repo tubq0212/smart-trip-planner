@@ -2,11 +2,31 @@
 from __future__ import annotations
 
 from typing import List, Dict, Any, Optional
+import shutil
 from ..config import get_settings
 from ..models.schemas import Location, POIInfo, WeatherInfo
 
 # 全局MCP工具实例
 _amap_mcp_tool = None
+
+# The server pins MCP 1.8.1, which cannot import with newer Pydantic releases.
+# Keep this isolated from the application's newer FastMCP dependencies.
+AMAP_TOOL_REQUIREMENTS = (
+    "--with", "pydantic==2.10.6",
+    "--with", "pydantic-settings==2.8.1",
+    "amap-mcp-server==0.1.11",
+)
+REQUIRED_AMAP_TOOLS = {"amap_maps_text_search", "amap_maps_weather"}
+
+
+def amap_server_command() -> List[str]:
+    installed = shutil.which("amap-mcp-server")
+    if installed:
+        return [installed]
+    uvx = shutil.which("uvx")
+    if not uvx:
+        raise RuntimeError("高德 MCP 启动器不可用，请安装 uv 或预装高德 MCP 工具")
+    return [uvx, *AMAP_TOOL_REQUIREMENTS]
 
 
 def get_amap_mcp_tool() -> MCPTool:
@@ -26,16 +46,25 @@ def get_amap_mcp_tool() -> MCPTool:
             raise ValueError("高德地图API Key未配置,请在.env文件中设置AMAP_API_KEY")
         
         # 创建MCP工具
-        _amap_mcp_tool = MCPTool(
+        candidate = MCPTool(
             name="amap",
             description="高德地图服务,支持POI搜索、路线规划、天气查询等功能",
-            server_command=["uvx", "amap-mcp-server"],
+            server_command=amap_server_command(),
             env={"AMAP_MAPS_API_KEY": settings.amap_api_key},
             auto_expand=True  # 自动展开为独立工具
         )
         
-        print(f"✅ 高德地图MCP工具初始化成功")
-        print(f"   工具数量: {len(_amap_mcp_tool._available_tools)}")
+        candidate.expandable = True
+        available = {tool.name for tool in candidate.get_expanded_tools()}
+        missing = REQUIRED_AMAP_TOOLS - available
+        if missing:
+            raise RuntimeError(
+                "高德 MCP 工具未就绪，已停止模型调用。缺少工具：" + ", ".join(sorted(missing))
+            )
+        # Publish the singleton only after discovery and name validation succeed.
+        _amap_mcp_tool = candidate
+        print("✅ 高德地图MCP工具初始化成功")
+        print(f"   工具数量: {len(available)}")
         
         # 打印可用工具列表
         if _amap_mcp_tool._available_tools:
