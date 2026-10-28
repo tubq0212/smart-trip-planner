@@ -260,7 +260,7 @@ class MultiAgentTripPlanner:
             # 步骤4: 行程规划Agent整合信息生成计划
             print("📋 步骤4: 生成行程计划...")
             planner_query = self._build_planner_query(request, attraction_response, weather_response, hotel_response)
-            planner_response = self.planner_agent.run(planner_query)
+            planner_response = self.planner_agent.run(planner_query, timeout=120.0)
             print(f"行程规划结果: {planner_response[:300]}...\n")
 
             # 解析最终计划

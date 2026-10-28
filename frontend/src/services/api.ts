@@ -40,10 +40,16 @@ apiClient.interceptors.response.use(
  */
 export async function generateTripPlan(formData: TripFormData): Promise<TripPlanResponse> {
   try {
-    const response = await apiClient.post<TripPlanResponse>('/api/trip/plan', formData)
+    // Four sequential agents need more time than an ordinary API query.
+    const response = await apiClient.post<TripPlanResponse>('/api/trip/plan', formData, {
+      timeout: 360000
+    })
     return response.data
   } catch (error: any) {
     console.error('生成旅行计划失败:', error)
+    if (error.code === 'ECONNABORTED') {
+      throw new Error('行程生成等待超时，后台可能仍在处理。请先查看服务日志，避免重复提交。')
+    }
     throw new Error(error.response?.data?.detail || error.message || '生成旅行计划失败')
   }
 }
