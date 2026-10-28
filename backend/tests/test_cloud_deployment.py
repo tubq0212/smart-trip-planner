@@ -24,6 +24,6 @@ class CloudDeploymentTests(unittest.TestCase):
 
     def test_client_configuration_does_not_include_server_secrets(self):
         from cloud_app import app
-        with patch.dict(os.environ,{'AMAP_WEB_JS_KEY':'browser-example','AMAP_API_KEY':'server-example','LLM_API_KEY':'private-example'}):
+        with patch.dict(os.environ,{'AMAP_WEB_JS_KEY':'browser-example','AMAP_WEB_JS_SECURITY_CODE':'security-example','AMAP_API_KEY':'server-example','LLM_API_KEY':'private-example'}):
             response=TestClient(app).get('/api/client-config')
-        self.assertEqual(response.json(),{'amap_web_js_key':'browser-example'})
+        self.assertEqual(response.json(),{'amap_web_js_key':'browser-example','amap_service_host':'/_AMapService'})

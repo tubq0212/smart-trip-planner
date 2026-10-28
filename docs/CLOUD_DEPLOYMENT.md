@@ -14,6 +14,7 @@ Render 从本仓库根目录 Dockerfile 构建，一个服务同时提供 Vue �
 
 - AMAP_API_KEY：高德 Web 服务密钥，只放在 Render 环境变量中，不写入源码或前端。
 - AMAP_WEB_JS_KEY：高德浏览器 JS API Key。它会被页面读取，属于客户端配置，需要在高德后台限制实际部署域名；不要填 Web 服务或模型密钥。
+- AMAP_WEB_JS_SECURITY_CODE：与上述 JS Key 配套的安全密钥 securityJsCode，只放 Render 环境变量。页面使用同源 `/_AMapService` 代理，由服务器补上安全密钥，不向网页返回该值。两项都配置后刷新已有行程页即可加载地图，无需再次调用模型。
 - UNSPLASH_ACCESS_KEY：可选照片服务密钥，未配置时使用页面的地点占位图。
 - LLM_API_KEY、LLM_BASE_URL、LLM_MODEL_ID：只有计划启用真实模型时才配置，并核对供应商额度及访问控制。默认 TRIP_FAST_MODE=true，不产生模型调用。
 

@@ -4,13 +4,20 @@ import os
 from fastapi import HTTPException
 from fastapi.responses import FileResponse
 from app.api.main import app
+from app.api.routes.map_proxy import router as map_proxy_router
+
+app.include_router(map_proxy_router)
 
 WEB = Path(os.getenv('FRONTEND_DIST', '/app/frontend/dist')).resolve()
 
 @app.get('/api/client-config')
 def client_config():
     # Only a domain-restricted browser key belongs here, never AMAP_API_KEY or LLM_API_KEY.
-    return {'amap_web_js_key': os.getenv('AMAP_WEB_JS_KEY', '')}
+    return {
+        'amap_web_js_key': os.getenv('AMAP_WEB_JS_KEY', '').strip(),
+        'amap_service_host': '/_AMapService'
+        if os.getenv('AMAP_WEB_JS_SECURITY_CODE', '').strip() else '',
+    }
 
 @app.get('/result', include_in_schema=False)
 def result_page():

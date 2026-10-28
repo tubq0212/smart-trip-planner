@@ -926,13 +926,16 @@ const exportAsPDF = async () => {
 // 初始化地图
 const initMap = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/client-config`)
+    const response = await fetch(`${API_BASE_URL}/api/client-config`, { cache: 'no-store' })
     const clientConfig = response.ok ? await response.json() : {}
     const mapKey = clientConfig.amap_web_js_key || import.meta.env.VITE_AMAP_WEB_JS_KEY
-    if (!mapKey) {
+    if (!mapKey || !clientConfig.amap_service_host) {
       const container = document.getElementById('amap-container')
-      if (container) container.textContent = '在线地图尚未配置，可先查看和编辑行程。'
+      if (container) container.textContent = '地图暂不可用，行程内容仍可查看和编辑。'
       return
+    }
+    ;(window as any)._AMapSecurityConfig = {
+      serviceHost: new URL(clientConfig.amap_service_host, window.location.origin).href
     }
     const AMap = await AMapLoader.load({
       key: mapKey,
@@ -954,7 +957,9 @@ const initMap = async () => {
     message.success('地图加载成功')
   } catch (error) {
     console.error('地图加载失败:', error)
-    message.error('地图加载失败')
+    const container = document.getElementById('amap-container')
+    if (container) container.textContent = '地图加载失败，请稍后刷新重试。'
+    message.error('地图加载失败，请稍后刷新重试')
   }
 }
 
